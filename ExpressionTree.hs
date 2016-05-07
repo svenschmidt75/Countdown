@@ -32,16 +32,16 @@ generateExpressionTree       xs = generateExpressionTree_internal xs []
 generateExpressionTree_internal :: [Int] -> [Tree] -> [Tree]
 generateExpressionTree_internal       []        _ = error "Should never happen"
 generateExpressionTree_internal      [x] subtrees = let sta = Leaf x    : subtrees in
-                                                let sts = Leaf (-x) : subtrees in
-                                                sta ++ sts
+                                                    let sts = Leaf (-x) : subtrees in
+                                                    sta ++ sts
 generateExpressionTree_internal (x:y:xs) trees =
-                      let sta1 = map (\z -> Node Add (Leaf x) z) subtrees in
+                      let sta1 = map (\z -> Node Add (Leaf x   ) z) subtrees in
                       let sta2 = map (\z -> Node Add (Leaf (-x)) z) subtrees in
-                      let stb1 = map (\z -> Node Sub (Leaf x) z) subtrees in
+                      let stb1 = map (\z -> Node Sub (Leaf x   ) z) subtrees in
                       let stb2 = map (\z -> Node Sub (Leaf (-x)) z) subtrees in
-                      let stc1 = map (\z -> Node Mul (Leaf x) z) subtrees in
+                      let stc1 = map (\z -> Node Mul (Leaf x   ) z) subtrees in
                       let stc2 = map (\z -> Node Mul (Leaf (-x)) z) subtrees in
-                      let std1 = map (\z -> Node Div (Leaf x) z) subtrees in
+                      let std1 = map (\z -> Node Div (Leaf x   ) z) subtrees in
                       let std2 = map (\z -> Node Div (Leaf (-x)) z) subtrees in
                       sta1 ++ sta2 ++ stb1 ++ stb2 ++ stc1 ++ stc2 ++ std1 ++ std2
                       where
@@ -53,3 +53,12 @@ evaluateExpressionTree (Node Add l r) = evaluateExpressionTree l + evaluateExpre
 evaluateExpressionTree (Node Sub l r) = evaluateExpressionTree l - evaluateExpressionTree r
 evaluateExpressionTree (Node Mul l r) = evaluateExpressionTree l * evaluateExpressionTree r
 evaluateExpressionTree (Node Div l r) = evaluateExpressionTree l `div` evaluateExpressionTree r
+
+describeExpressionTree :: Tree -> String
+describeExpressionTree (Leaf x)
+    | x < 0     = "(" ++ show x ++ ")"
+    | otherwise = show x
+describeExpressionTree (Node Add l r) = describeExpressionTree l ++ "+" ++ describeExpressionTree r
+describeExpressionTree (Node Sub l r) = describeExpressionTree l ++ "-" ++ describeExpressionTree r
+describeExpressionTree (Node Mul l r) = describeExpressionTree l ++ "*" ++ describeExpressionTree r
+describeExpressionTree (Node Div l r) = describeExpressionTree l ++ "/" ++ describeExpressionTree r
