@@ -65,16 +65,27 @@ describeExpressionTree (Node Div l r) = describeExpressionTree l ++ "/" ++ descr
 
 hasInvalidDivision :: Tree -> Bool
 hasInvalidDivision (Leaf _)                     = False
-hasInvalidDivision (Node Div (Leaf x) (Leaf y)) = m * y /= x
-                                                  where
-                                                   m  = quot x y
+hasInvalidDivision (Node Div l r)               = if hasInvalidDivision l || hasInvalidDivision r then
+                                                    True
+                                                  else
+                                                    m * y /= x
+                                                    where
+                                                      x = evaluateExpressionTree l
+                                                      y = evaluateExpressionTree r
+                                                      m = quot x y
 hasInvalidDivision (Node _ l r)                 = hasInvalidDivision l || hasInvalidDivision r
+
+-- map (\x -> (describeExpressionTree x, evaluateExpressionTree x)) (generateExpressionTree [1, 3, 7, 10, 25, 50])
+-- Node Add (Leaf 1) (Node Add (Leaf 3) (Node Add (Leaf 7) (Node Div (Leaf 10) (Node Div (Leaf 25) (Leaf 50)))))
+-- Node Add (Leaf 1) (Node Add (Leaf 3) (Node Add (Leaf 7) (Node Div (Leaf 10) (Node Mul (Leaf (-25)) (Leaf 50)))))
+-- Node Div (Leaf 10) (Node Mul (Leaf (-25)) (Leaf 50))
 
 main :: IO ()
 main = do
-        let tree = generateExpressionTree [1, 2, 3]
-        print tree
+        let tree = generateExpressionTree [1, 3, 7, 10, 25, 50]
+--        print tree
         let tree2 = filter (not . hasInvalidDivision) tree
-        print tree2
+--        print tree2
         let tree3 = map evaluateExpressionTree tree2
-        print tree3
+--        print tree3
+        print ((filter (== 765)) tree3)
