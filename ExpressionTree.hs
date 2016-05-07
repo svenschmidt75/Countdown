@@ -11,24 +11,45 @@ data Op = Add
         deriving (Show)
 
 {- Input:
- - 1. List of integers to create a syntax tree for
- - 2. List of syntax trees generated, initially empty
+ - 1. List of integers to create an expression tree for
+ - 2. List of expression trees generated, initially empty
  - Output:
- - List of all generated syntax trees
+ - List of all generated expression trees
+ -
+ - Note: Some of the generated expression trees are equivalent in the sense
+ -       that the resulting algebraic expression is the same.
+ -       More so, since we later use all permutations of these numbers,
+ -       we will create tons of redundant expression trees. This is to be
+ -       cleaned up at a later stage.
+ -       Example:
+ -       The expression tree for +1+3*(-4) is equivalent to the one generated
+ -       from +1-3*4. Currently, we generate both.
 -}
-root :: [Int] -> [Tree] -> [Tree]
-root       []        _ = error "Should never happen"
-root      [x] subtrees = let sta = Leaf x : subtrees in
-                         let sts = Leaf (-x) : subtrees in
-                         sta ++ sts
-root (x:y:xs) trees = let sta1 = map (\z -> Node Add (Leaf x) z) subtrees in
-                      let sta2= map (\z -> Node Add (Leaf (-x)) z) subtrees in
-                      let stb1= map (\z -> Node Sub (Leaf x) z) subtrees in
-                      let stb2= map (\z -> Node Sub (Leaf (-x)) z) subtrees in
-                      let stc1= map (\z -> Node Mul (Leaf x) z) subtrees in
-                      let stc2= map (\z -> Node Mul (Leaf (-x)) z) subtrees in
-                      let std1= map (\z -> Node Div (Leaf x) z) subtrees in
-                      let std2= map (\z -> Node Div (Leaf (-x)) z) subtrees in
+generateExpressionTree :: [Int] -> [Tree]
+generateExpressionTree       [] = error "Should never happen"
+generateExpressionTree       xs = generateExpressionTree_internal xs []
+
+generateExpressionTree_internal :: [Int] -> [Tree] -> [Tree]
+generateExpressionTree_internal       []        _ = error "Should never happen"
+generateExpressionTree_internal      [x] subtrees = let sta = Leaf x    : subtrees in
+                                                let sts = Leaf (-x) : subtrees in
+                                                sta ++ sts
+generateExpressionTree_internal (x:y:xs) trees =
+                      let sta1 = map (\z -> Node Add (Leaf x) z) subtrees in
+                      let sta2 = map (\z -> Node Add (Leaf (-x)) z) subtrees in
+                      let stb1 = map (\z -> Node Sub (Leaf x) z) subtrees in
+                      let stb2 = map (\z -> Node Sub (Leaf (-x)) z) subtrees in
+                      let stc1 = map (\z -> Node Mul (Leaf x) z) subtrees in
+                      let stc2 = map (\z -> Node Mul (Leaf (-x)) z) subtrees in
+                      let std1 = map (\z -> Node Div (Leaf x) z) subtrees in
+                      let std2 = map (\z -> Node Div (Leaf (-x)) z) subtrees in
                       sta1 ++ sta2 ++ stb1 ++ stb2 ++ stc1 ++ stc2 ++ std1 ++ std2
                       where
-                        subtrees = root (y:xs) trees
+                        subtrees = generateExpressionTree_internal (y:xs) trees
+
+evaluateExpressionTree :: Tree -> Int
+evaluateExpressionTree (Leaf x) = x
+evaluateExpressionTree (Node Add l r) = evaluateExpressionTree l + evaluateExpressionTree r
+evaluateExpressionTree (Node Sub l r) = evaluateExpressionTree l - evaluateExpressionTree r
+evaluateExpressionTree (Node Mul l r) = evaluateExpressionTree l * evaluateExpressionTree r
+evaluateExpressionTree (Node Div l r) = evaluateExpressionTree l `div` evaluateExpressionTree r
