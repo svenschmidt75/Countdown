@@ -62,3 +62,19 @@ describeExpressionTree (Node Add l r) = describeExpressionTree l ++ "+" ++ descr
 describeExpressionTree (Node Sub l r) = describeExpressionTree l ++ "-" ++ describeExpressionTree r
 describeExpressionTree (Node Mul l r) = describeExpressionTree l ++ "*" ++ describeExpressionTree r
 describeExpressionTree (Node Div l r) = describeExpressionTree l ++ "/" ++ describeExpressionTree r
+
+hasInvalidDivision :: Tree -> Bool
+hasInvalidDivision (Leaf _)                     = False
+hasInvalidDivision (Node Div (Leaf x) (Leaf y)) = m * y /= x
+                                                  where
+                                                   m  = quot x y
+hasInvalidDivision (Node _ l r)                 = hasInvalidDivision l || hasInvalidDivision r
+
+main :: IO ()
+main = do
+        let tree = generateExpressionTree [1, 2, 3]
+        print tree
+        let tree2 = filter (not . hasInvalidDivision) tree
+        print tree2
+        let tree3 = map evaluateExpressionTree tree2
+        print tree3
