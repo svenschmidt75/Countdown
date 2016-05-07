@@ -12,6 +12,11 @@ data Op = Add
 
 root :: [Int] -> [Tree] -> [Tree]
 root       []        _ = error "Should never happen"
-root      [x] subtrees = Leaf x : subtrees
-root (x:y:xs) subtrees = let add_subtrees = root (y:xs) subtrees in
-                         map (\z -> Node Add (Leaf x) z) add_subtrees
+root      [x] subtrees = let sta = Leaf x : subtrees in
+                         let sts = Leaf (-x) : subtrees in
+                         sta ++ sts
+root (x:y:xs) subtrees = let sta = map (\z -> Node Add (Leaf x) z) add_subtrees in
+                         let stb = map (\z -> Node Add (Leaf (-x)) z) add_subtrees in
+                         sta ++ stb
+                         where
+                            add_subtrees = root (y:xs) subtrees
