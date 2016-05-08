@@ -1,4 +1,4 @@
-module ExpressionTree where
+module Main where
 
 data Tree = Node Op Tree Tree
           | Leaf Int
@@ -52,7 +52,9 @@ evaluateExpressionTree (Leaf x) = x
 evaluateExpressionTree (Node Add l r) = evaluateExpressionTree l + evaluateExpressionTree r
 evaluateExpressionTree (Node Sub l r) = evaluateExpressionTree l - evaluateExpressionTree r
 evaluateExpressionTree (Node Mul l r) = evaluateExpressionTree l * evaluateExpressionTree r
-evaluateExpressionTree (Node Div l r) = evaluateExpressionTree l `div` evaluateExpressionTree r
+evaluateExpressionTree subtree@(Node Div l r)
+    | evaluateExpressionTree r == 0 = error (show ("Failing subtree: " ++ (describeExpressionTree subtree)))
+    | otherwise                     = evaluateExpressionTree l `div` evaluateExpressionTree r
 
 describeExpressionTree :: Tree -> String
 describeExpressionTree (Leaf x)
@@ -77,22 +79,45 @@ hasInvalidDivision (Node _ l r)                 = hasInvalidDivision l || hasInv
 
 hasNonPositiveSubExtression :: Tree -> Bool
 hasNonPositiveSubExtression (Leaf x) = x <= 0
-hasNonPositiveSubExtression subtree@(Node Sub l r) = hasNonPositiveSubExtression l || hasNonPositiveSubExtression r || evaluateExpressionTree subtree <= 0
+hasNonPositiveSubExtression subtree@(Node Sub l r) = hasNonPositiveSubExtression l ||
+                                                     hasNonPositiveSubExtression r ||
+                                                     (hasInvalidDivision l  || hasInvalidDivision r || evaluateExpressionTree subtree <= 0)
 hasNonPositiveSubExtression (Node _ l r) = hasNonPositiveSubExtression l || hasNonPositiveSubExtression r
 
--- map (\x -> (describeExpressionTree x, evaluateExpressionTree x)) (generateExpressionTree [1, 3, 7, 10, 25, 50])
--- Node Add (Leaf 1) (Node Add (Leaf 3) (Node Add (Leaf 7) (Node Div (Leaf 10) (Node Div (Leaf 25) (Leaf 50)))))
--- Node Add (Leaf 1) (Node Add (Leaf 3) (Node Add (Leaf 7) (Node Div (Leaf 10) (Node Mul (Leaf (-25)) (Leaf 50)))))
--- Node Div (Leaf 10) (Node Mul (Leaf (-25)) (Leaf 50))
+
+
+rotateInternal :: [Int] -> Int -> [[Int]]
+rotateInternal [] _ = []
+rotateInternal q@(x:xs) n
+    | n > 0     = q : rotateInternal (xs ++ [x]) (n - 1)
+    | otherwise = []
+
+-- in: [1, 2, 3]
+-- out: [[1, 2, 3], [2, 3, 1], [3, 1, 2]]
+rotate :: [Int] -> [[Int]]
+rotate xs = rotateInternal xs (length xs)
+
+-- in: [[2, 3], [3, 2]] 1
+-- out: [[1, 2, 3], [1, 3, 2]]
+prefix :: [[Int]] -> Int -> [[Int]]
+prefix xs x = map (x:) xs
+
+permutations :: [Int] -> [[Int]]
+permutations [] = [[]]
+permutations  q = let rotated = rotate q in
+                  concatMap (\(x:xs) -> prefix (permutations xs) x) rotated
+
+
+
+-- (Node Div (Leaf 10) (Node Div (Leaf 25) (Leaf 50)))
 
 main :: IO ()
 main = do
-        let tree = generateExpressionTree [1, 3, 7, 10, 25, 50]
---        print tree
-        let tree2 = filter (not . hasInvalidDivision) tree
---        print tree2
-        let tree3 = filter (not . hasNonPositiveSubExtression) tree2
---        print tree3
-        let tree4 = map evaluateExpressionTree tree3
---        print tree4
-        print tree4
+        let numbers = [1, 3, 7, 10, 25, 50]
+        let perm = permutations numbers
+        let trees = concat $ map generateExpressionTree perm
+        let trees2 = filter (not . hasNonPositiveSubExtression) trees
+        let trees3 = filter (not . hasInvalidDivision) trees2
+        let trees4 = map (\x -> (describeExpressionTree x, evaluateExpressionTree x)) trees3
+        let trees5 = filter (\(_, y) -> y == 765) trees4
+        print trees5
