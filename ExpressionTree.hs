@@ -75,6 +75,11 @@ hasInvalidDivision (Node Div l r)               = if hasInvalidDivision l || has
                                                       m = quot x y
 hasInvalidDivision (Node _ l r)                 = hasInvalidDivision l || hasInvalidDivision r
 
+hasNonPositiveSubExtression :: Tree -> Bool
+hasNonPositiveSubExtression (Leaf x) = x <= 0
+hasNonPositiveSubExtression subtree@(Node Sub l r) = hasNonPositiveSubExtression l || hasNonPositiveSubExtression r || evaluateExpressionTree subtree <= 0
+hasNonPositiveSubExtression (Node _ l r) = hasNonPositiveSubExtression l || hasNonPositiveSubExtression r
+
 -- map (\x -> (describeExpressionTree x, evaluateExpressionTree x)) (generateExpressionTree [1, 3, 7, 10, 25, 50])
 -- Node Add (Leaf 1) (Node Add (Leaf 3) (Node Add (Leaf 7) (Node Div (Leaf 10) (Node Div (Leaf 25) (Leaf 50)))))
 -- Node Add (Leaf 1) (Node Add (Leaf 3) (Node Add (Leaf 7) (Node Div (Leaf 10) (Node Mul (Leaf (-25)) (Leaf 50)))))
@@ -86,6 +91,8 @@ main = do
 --        print tree
         let tree2 = filter (not . hasInvalidDivision) tree
 --        print tree2
-        let tree3 = map evaluateExpressionTree tree2
+        let tree3 = filter (not . hasNonPositiveSubExtression) tree2
 --        print tree3
-        print ((filter (== 765)) tree3)
+        let tree4 = map evaluateExpressionTree tree3
+--        print tree4
+        print tree4
