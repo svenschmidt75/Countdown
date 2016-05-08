@@ -60,10 +60,10 @@ describeExpressionTree :: Tree -> String
 describeExpressionTree (Leaf x)
     | x < 0     = "(" ++ show x ++ ")"
     | otherwise = show x
-describeExpressionTree (Node Add l r) = describeExpressionTree l ++ "+" ++ describeExpressionTree r
-describeExpressionTree (Node Sub l r) = describeExpressionTree l ++ "-" ++ describeExpressionTree r
-describeExpressionTree (Node Mul l r) = describeExpressionTree l ++ "*" ++ describeExpressionTree r
-describeExpressionTree (Node Div l r) = describeExpressionTree l ++ "/" ++ describeExpressionTree r
+describeExpressionTree (Node Add l r) = "(" ++ describeExpressionTree l ++ "+" ++ describeExpressionTree r ++ ")"
+describeExpressionTree (Node Sub l r) = "(" ++ describeExpressionTree l ++ "-" ++ describeExpressionTree r ++ ")"
+describeExpressionTree (Node Mul l r) = "(" ++ describeExpressionTree l ++ "*" ++ describeExpressionTree r ++ ")"
+describeExpressionTree (Node Div l r) = "(" ++ describeExpressionTree l ++ "/" ++ describeExpressionTree r ++ ")"
 
 hasInvalidDivision :: Tree -> Bool
 hasInvalidDivision (Leaf _)                     = False
@@ -81,7 +81,9 @@ hasNonPositiveSubExtression :: Tree -> Bool
 hasNonPositiveSubExtression (Leaf x) = x <= 0
 hasNonPositiveSubExtression subtree@(Node Sub l r) = hasNonPositiveSubExtression l ||
                                                      hasNonPositiveSubExtression r ||
-                                                     (hasInvalidDivision l  || hasInvalidDivision r || evaluateExpressionTree subtree <= 0)
+                                                     (hasInvalidDivision l ||
+                                                      hasInvalidDivision r ||
+                                                      evaluateExpressionTree subtree <= 0)
 hasNonPositiveSubExtression (Node _ l r) = hasNonPositiveSubExtression l || hasNonPositiveSubExtression r
 
 
@@ -108,8 +110,7 @@ permutations  q = let rotated = rotate q in
                   concatMap (\(x:xs) -> prefix (permutations xs) x) rotated
 
 
-
--- (Node Div (Leaf 10) (Node Div (Leaf 25) (Leaf 50)))
+-- (Node Add (Leaf 25) (Node Mul (Leaf 10) (Node Add (Leaf 50) (Node Mul (Leaf 3) (Node Add (Leaf 7) (Leaf 1))))))
 
 main :: IO ()
 main = do
