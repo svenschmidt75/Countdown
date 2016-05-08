@@ -56,6 +56,7 @@ evaluateExpressionTree subtree@(Node Div l r)
     | evaluateExpressionTree r == 0 = error (show ("Failing subtree: " ++ (describeExpressionTree subtree)))
     | otherwise                     = evaluateExpressionTree l `div` evaluateExpressionTree r
 
+-- Print the expression tree
 describeExpressionTree :: Tree -> String
 describeExpressionTree (Leaf x)
     | x < 0     = "(" ++ show x ++ ")"
@@ -65,6 +66,7 @@ describeExpressionTree (Node Sub l r) = "(" ++ describeExpressionTree l ++ "-" +
 describeExpressionTree (Node Mul l r) = "(" ++ describeExpressionTree l ++ "*" ++ describeExpressionTree r ++ ")"
 describeExpressionTree (Node Div l r) = "(" ++ describeExpressionTree l ++ "/" ++ describeExpressionTree r ++ ")"
 
+-- Check whether an expression tree has a node that divides by 0
 hasInvalidDivision :: Tree -> Bool
 hasInvalidDivision (Leaf _)                     = False
 hasInvalidDivision (Node Div l r)               = if hasInvalidDivision l || hasInvalidDivision r then
@@ -77,40 +79,48 @@ hasInvalidDivision (Node Div l r)               = if hasInvalidDivision l || has
                                                       m = quot x y
 hasInvalidDivision (Node _ l r)                 = hasInvalidDivision l || hasInvalidDivision r
 
+-- Check whether an expression tree has a subexpression that evaluates to
+-- <= 0
 hasNonPositiveSubExtression :: Tree -> Bool
 hasNonPositiveSubExtression (Leaf x) = x <= 0
 hasNonPositiveSubExtression subtree@(Node Sub l r) = hasNonPositiveSubExtression l ||
                                                      hasNonPositiveSubExtression r ||
-                                                     (hasInvalidDivision l ||
-                                                      hasInvalidDivision r ||
-                                                      evaluateExpressionTree subtree <= 0)
+                                                     isValidSubTree == False
+                                                     where
+                                                        isValidSubTree = hasInvalidDivision l == False &&
+                                                                         hasInvalidDivision r == False && 
+                                                                         evaluateExpressionTree subtree > 0
 hasNonPositiveSubExtression (Node _ l r) = hasNonPositiveSubExtression l || hasNonPositiveSubExtression r
 
 
-
+-- Rotates a list of ints.
+-- Examples:
+--      [1, 2, 3] 1 -> [[1, 2, 3]]
+--      [1, 2, 3] 2 -> [[1, 2, 3], [2, 3, 1]]
+--      [1, 2, 3] 3 -> [[1, 2, 3], [2, 3, 1], [3, 1, 2]]
 rotateInternal :: [Int] -> Int -> [[Int]]
 rotateInternal [] _ = []
 rotateInternal q@(x:xs) n
     | n > 0     = q : rotateInternal (xs ++ [x]) (n - 1)
     | otherwise = []
 
--- in: [1, 2, 3]
--- out: [[1, 2, 3], [2, 3, 1], [3, 1, 2]]
+-- Rotates a list of ints.
+-- Examples:
+--      [1, 2, 3] -> [[1, 2, 3], [2, 3, 1], [3, 1, 2]]
 rotate :: [Int] -> [[Int]]
 rotate xs = rotateInternal xs (length xs)
 
--- in: [[2, 3], [3, 2]] 1
--- out: [[1, 2, 3], [1, 3, 2]]
+-- Prefix a list of list of numbers with a number.
+-- Examples:
+--      [[2, 3], [3, 2]] 1 -> [[1, 2, 3], [1, 3, 2]]
 prefix :: [[Int]] -> Int -> [[Int]]
 prefix xs x = map (x:) xs
 
+-- Generate all permutations for a list of numbers
 permutations :: [Int] -> [[Int]]
 permutations [] = [[]]
 permutations  q = let rotated = rotate q in
                   concatMap (\(x:xs) -> prefix (permutations xs) x) rotated
-
-
--- (Node Add (Leaf 25) (Node Mul (Leaf 10) (Node Add (Leaf 50) (Node Mul (Leaf 3) (Node Add (Leaf 7) (Leaf 1))))))
 
 main :: IO ()
 main = do
